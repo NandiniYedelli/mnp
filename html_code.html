@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jeevan Connect - Emergency Medical Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .phone-container {
+            width: 375px;
+            height: 812px;
+            background: #000;
+            border-radius: 40px;
+            margin: 20px auto;
+            padding: 10px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+            position: relative;
+        }
+
+        .screen {
+            width: 100%;
+            height: 100%;
+            background: #fff;
+            border-radius: 30px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .status-bar {
+            height: 44px;
+            background: linear-gradient(90deg, #4CAF50, #2196F3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .app-screens {
+            position: relative;
+            width: 100%;
+            height: calc(100% - 44px);
+        }
+
+        .screen-content {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateX(100%);
+        }
+
+        .screen-content.active {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        /* Home Screen */
+        .home-screen {
+            background: linear-gradient(180deg, #ff6b6b 0%, #ee5a52 100%);
+            color: white;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .emergency-btn {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #fff, #f0f0f0);
+            color: #ff4757;
+            font-size: 24px;
+            font-weight: bold;
+            border: 8px solid rgba(255,255,255,0.3);
+            margin: 40px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .action-card {
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .action-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* Dashboard Screen */
+        .dashboard {
+            padding: 20px;
+        }
+
+        .dashboard-header {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            padding: 25px;
+            border-radius: 20px;
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 28px;
+            font-weight: bold;
+            color: #2196F3;
+        }
+
+        .map-container {
+            background: #e3f2fd;
+            height: 200px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ambulance-marker {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: #4CAF50;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+            animation: bounce 1s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* Hospital Integration Screen */
+        .hospital-list {
+            padding: 20px;
+        }
+
+        .hospital-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-left: 5px solid #4CAF50;
+        }
+
+        .hospital-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .hospital-name {
+            font-weight: bold;
+            font-size: 16px;
+            color: #333;
+        }
+
+        .availability-status {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .available {
+            background: #e8f5e8;
+            color: #4CAF50;
+        }
+
+        .limited {
+            background: #fff3e0;
+            color: #FF9800;
+        }
+
+        .bed-info {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            font-size: 14px;
+            color: #666;
+        }
+
+        /* Traffic Management Screen */
+        .traffic-screen {
+            padding: 20px;
+            background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
+        }
+
+        .route-optimizer {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .route-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .eta-display {
+            font-size: 32px;
+            font-weight: bold;
+            color: #4CAF50;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .traffic-alerts {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        /* Patient Tracking Screen */
+        .patient-tracking {
+            padding: 20px;
+        }
+
+        .patient-card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .patient-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .patient-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            margin-right: 15px;
+        }
+
+        .vital-signs {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .vital-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .vital-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2196F3;
+        }
+
+        /* Communication Screen */
+        .communication {
+            padding: 20px;
+        }
+
+        .chat-container {
+            background: white;
+            border-radius: 20px;
+            height: 400px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 15px;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 12px 16px;
+            border-radius: 18px;
+            max-width: 80%;
+        }
+
+        .message.sent {
+            background: #2196F3;
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 5px;
+        }
+
+        .message.received {
+            background: #f1f3f4;
+            color: #333;
+            border-bottom-left-radius: 5px;
+        }
+
+        .message-input {
+            display: flex;
+            gap: 10px;
+        }
+
+        .message-input input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            outline: none;
+        }
+
+        .send-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 80px;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.1);
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #999;
+        }
+
+        .nav-item.active {
+            color: #4CAF50;
+            transform: translateY(-3px);
+        }
+
+        .nav-icon {
+            width: 24px;
+            height: 24px;
+            margin-bottom: 5px;
+            font-size: 20px;
+        }
+
+        .nav-label {
+            font-size: 11px;
+        }
+
+        /* Screen Navigation Controls */
+        .screen-nav {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+            background: rgba(0,0,0,0.8);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 450px;
+        }
+
+        .nav-btn {
+            padding: 10px 15px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-container">
+        <div class="screen">
+            <div class="status-bar">
+                <span>9:41 AM</span>
+                <span>Jeevan Connect</span>
+                <span>100%</span>
+            </div>
+            
+            <div class="app-screens">
+                <!-- Home/Emergency Screen -->
+                <div class="screen-content active" id="home">
+                    <div class="home-screen">
+                        <h1 style="margin-bottom: 10px;">🚨 Emergency Alert</h1>
+                        <p style="opacity: 0.9;">Tap the button below for immediate assistance</p>
+                        
+                        <div class="emergency-btn" onclick="showAlert()">
+                            SOS<br>EMERGENCY
+                        </div>
+                        
+                        <div class="quick-actions">
+                            <div class="action-card">
+                                <div style="font-size: 24px; margin-bottom: 10px;">🚑</div>
+                                <div>Call Ambulance</div>
+                            </div>
+                            <div class="action-card">
+                                <div style="font-size: 24px; margin-bottom: 10px;">🏥</div>
+                                <div>Find Hospital</div>
+                            </div>
+                            <div class="action-card">
+                                <div style="font-size: 24px; margin-bottom: 10px;">📞</div>
+                                <div>Emergency Contacts</div>
+                            </div>
+                            <div class="action-card">
+                                <div style="font-size: 24px; margin-bottom: 10px;">📍</div>
+                                <div>Share Location</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dashboard Screen -->
+                <div class="screen-content" id="dashboard">
+                    <div class="dashboard">
+                        <div class="dashboard-header">
+                            <h2>Real-Time Dashboard</h2>
+                            <p style="opacity: 0.9;">System Status: All Services Online</p>
+                        </div>
+
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-number">12</div>
+                                <div>Active Ambulances</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number">4.2min</div>
+                                <div>Avg Response Time</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number">89%</div>
+                                <div>Hospital Capacity</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number">156</div>
+                                <div>Cases Handled Today</div>
+                            </div>
+                        </div>
+
+                        <div class="map-container">
+                            <div style="color: #666; text-align: center;">
+                                📍 Real-Time Tracking Map
+                                <div class="ambulance-marker" style="top: 30%; left: 20%;">🚑</div>
+                                <div class="ambulance-marker" style="top: 60%; left: 70%;">🚑</div>
+                                <div class="ambulance-marker" style="top: 40%; left: 50%;">🚑</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hospital Integration Screen -->
+                <div class="screen-content" id="hospital">
+                    <div class="hospital-list">
+                        <h2 style="margin-bottom: 20px; color: #333;">🏥 Hospital Integration</h2>
+                        
+                        <div class="hospital-card">
+                            <div class="hospital-header">
+                                <div class="hospital-name">Apollo Hospital</div>
+                                <div class="availability-status available">Available</div>
+                            </div>
+                            <div class="bed-info">
+                                <span>ICU Beds: 8/20</span>
+                                <span>Distance: 2.3 km</span>
+                            </div>
+                            <div class="bed-info">
+                                <span>Emergency: Ready</span>
+                                <span>ETA: 6 mins</span>
+                            </div>
+                        </div>
+
+                        <div class="hospital-card">
+                            <div class="hospital-header">
+                                <div class="hospital-name">Max Healthcare</div>
+                                <div class="availability-status limited">Limited</div>
+                            </div>
+                            <div class="bed-info">
+                                <span>ICU Beds: 18/20</span>
+                                <span>Distance: 3.1 km</span>
+                            </div>
+                            <div class="bed-info">
+                                <span>Emergency: Busy</span>
+                                <span>ETA: 8 mins</span>
+                            </div>
+                        </div>
+
+                        <div class="hospital-card">
+                            <div class="hospital-header">
+                                <div class="hospital-name">Fortis Hospital</div>
+                                <div class="availability-status available">Available</div>
+                            </div>
+                            <div class="bed-info">
+                                <span>ICU Beds: 5/15</span>
+                                <span>Distance: 4.2 km</span>
+                            </div>
+                            <div class="bed-info">
+                                <span>Emergency: Ready</span>
+                                <span>ETA: 12 mins</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Traffic Management Screen -->
+                <div class="screen-content" id="traffic">
+                    <div class="traffic-screen">
+                        <h2 style="margin-bottom: 20px; color: #333;">🚦 Smart Traffic Management</h2>
+                        
+                        <div class="route-optimizer">
+                            <div class="route-header">
+                                <h3>Route Optimization</h3>
+                                <span style="color: #4CAF50;">🟢 Active</span>
+                            </div>
+                            
+                            <div class="eta-display">
+                                ETA: 5:32
+                            </div>
+                            
+                            <div style="text-align: center; color: #666;">
+                                Traffic signals synchronized<br>
+                                Priority lane activated
+                            </div>
+                        </div>
+
+                        <div class="traffic-alerts">
+                            <h4 style="color: #856404; margin-bottom: 10px;">⚠️ Traffic Alerts</h4>
+                            <div style="font-size: 14px; color: #856404;">
+                                • Heavy congestion on MG Road<br>
+                                • Alternative route suggested<br>
+                                • Signal preemption activated
+                            </div>
+                        </div>
+
+                        <div style="background: white; border-radius: 15px; padding: 20px; margin-top: 20px;">
+                            <h4 style="margin-bottom: 15px;">Traffic Signal Status</h4>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                <span>Signal 1 (MG Road)</span>
+                                <span style="color: #4CAF50;">🟢 Green Priority</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                <span>Signal 2 (Brigade Road)</span>
+                                <span style="color: #4CAF50;">🟢 Green Priority</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>Signal 3 (Commercial St)</span>
+                                <span style="color: #FF9800;">🟡 Preparing</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Patient Tracking Screen -->
+                <div class="screen-content" id="patient">
+                    <div class="patient-tracking">
+                        <h2 style="margin-bottom: 20px; color: #333;">👤 Patient Monitoring</h2>
+                        
+                        <div class="patient-card">
+                            <div class="patient-header">
+                                <div class="patient-avatar">JP</div>
+                                <div>
+                                    <h3>John Patient</h3>
+                                    <p style="color: #666;">Age: 45 | M | Emergency: Cardiac</p>
+                                </div>
+                            </div>
+
+                            <div class="vital-signs">
+                                <div class="vital-card">
+                                    <div class="vital-value">78</div>
+                                    <div style="font-size: 12px; color: #666;">Heart Rate</div>
+                                </div>
+                                <div class="vital-card">
+                                    <div class="vital-value">120/80</div>
+                                    <div style="font-size: 12px; color: #666;">Blood Pressure</div>
+                                </div>
+                                <div class="vital-card">
+                                    <div class="vital-value">98%</div>
+                                    <div style="font-size: 12px; color: #666;">SpO2</div>
+                                </div>
+                            </div>
+
+                            <div style="background: #e8f5e8; padding: 15px; border-radius: 10px; margin-top: 15px;">
+                                <h4 style="color: #4CAF50; margin-bottom: 5px;">Status: Stable</h4>
+                                <p style="font-size: 14px; color: #666;">Patient responding well. Vital signs within normal range.</p>
+                            </div>
+                        </div>
+
+                        <div style="background: white; border-radius: 15px; padding: 20px;">
+                            <h4 style="margin-bottom: 15px;">📋 Medical History Quick Access</h4>
+                            <div style="font-size: 14px; color: #666;">
+                                • Previous Cardiac Episodes: 2<br>
+                                • Allergies: Penicillin<br>
+                                • Current Medications: Aspirin, Metoprolol<br>
+                                • Emergency Contact: Wife - 9876543210
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Communication Screen -->
+                <div class="screen-content" id="communication">
+                    <div class="communication">
+                        <h2 style="margin-bottom: 20px; color: #333;">💬 Emergency Communication</h2>
+                        
+                        <div class="chat-container">
+                            <div class="chat-messages">
+                                <div class="message received">
+                                    <strong>Ambulance Driver:</strong><br>
+                                    En route to location. ETA 5 minutes.
+                                </div>
+                                <div class="message sent">
+                                    Patient is conscious and breathing. Chest pain ongoing.
+                                </div>
+                                <div class="message received">
+                                    <strong>Hospital ER:</strong><br>
+                                    Cardiac team alerted. Bay 3 prepared for arrival.
+                                </div>
+                                <div class="message sent">
+                                    Understood. Patient vitals stable.
+                                </div>
+                                <div class="message received">
+                                    <strong>Traffic Control:</strong><br>
+                                    Route cleared. All signals prioritized.
+                                </div>
+                            </div>
+                            
+                            <div class="message-input">
+                                <input type="text" placeholder="Type your message..." />
+                                <button class="send-btn">Send</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Navigation -->
+            <div class="bottom-nav">
+                <div class="nav-item active" onclick="showScreen('home')">
+                    <div class="nav-icon">🚨</div>
+                    <div class="nav-label">Emergency</div>
+                </div>
+                <div class="nav-item" onclick="showScreen('dashboard')">
+                    <div class="nav-icon">📊</div>
+                    <div class="nav-label">Dashboard</div>
+                </div>
+                <div class="nav-item" onclick="showScreen('hospital')">
+                    <div class="nav-icon">🏥</div>
+                    <div class="nav-label">Hospitals</div>
+                </div>
+                <div class="nav-item" onclick="showScreen('traffic')">
+                    <div class="nav-icon">🚦</div>
+                    <div class="nav-label">Traffic</div>
+                </div>
+                <div class="nav-item" onclick="showScreen('patient')">
+                    <div class="nav-icon">👤</div>
+                    <div class="nav-label">Patient</div>
+                </div>
+                <div class="nav-item" onclick="showScreen('communication')">
+                    <div class="nav-icon">💬</div>
+                    <div class="nav-label">Chat</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Screen Navigation Controls -->
+    <div class="screen-nav">
+        <button class="nav-btn" onclick="showScreen('home')">Emergency</button>
+        <button class="nav-btn" onclick="showScreen('dashboard')">Dashboard</button>
+        <button class="nav-btn" onclick="showScreen('hospital')">Hospitals</button>
+        <button class="nav-btn" onclick="showScreen('traffic')">Traffic</button>
+        <button class="nav-btn" onclick="showScreen('patient')">Patient</button>
+        <button class="nav-btn" onclick="showScreen('communication')">Chat</button>
+    </div>
+
+    <script>
+        function showScreen(screenId) {
+            // Hide all screens
+            document.querySelectorAll('.screen-content').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            
+            // Show selected screen
+            document.getElementById(screenId).classList.add('active');
+            
+            // Update navigation
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Find and activate corresponding nav item
+            const navItems = document.querySelectorAll('.nav-item');
+            const screenOrder = ['home', 'dashboard', 'hospital', 'traffic', 'patient', 'communication'];
+            const index = screenOrder.indexOf(screenId);
+            if (index !== -1 && navItems[index]) {
+                navItems[index].classList.add('active');
+            }
+        }
+
+        function showAlert() {
+            alert('🚨 EMERGENCY ALERT ACTIVATED!\n\n✅ Ambulance dispatched\n✅ Nearest hospital notified\n✅ Traffic signals prioritized\n✅ Emergency contacts informed\n\nHelp is on the way!');
+        }
+
+        // Auto-rotate screens for demonstration (optional)
+        let currentScreen = 0;
+        const screens = ['home', 'dashboard', 'hospital', 'traffic', 'patient', 'communication'];
+        
+        // Uncomment below to auto-rotate screens every 10 seconds
+        /*
+        setInterval(() => {
+            currentScreen = (currentScreen + 1) % screens.length;
+            showScreen(screens[currentScreen]);
+        }, 10000);
+        */
+    </script>
+</body>
+</html>
