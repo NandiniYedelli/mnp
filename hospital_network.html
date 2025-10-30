@@ -1,0 +1,527 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Dadar·Sion·Matunga·Wadala — Hospital & Resource Management (Demo)</title>
+
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+<style>
+  /* ---- Colorful UI theme (creative but readable) ---- */
+  :root{
+    --bg-1: #0b1020;
+    --panel: linear-gradient(180deg,#071a2a,#062033);
+    --accent-a: #7c3aed; /* purple */
+    --accent-b: #06b6d4; /* cyan */
+    --good: #16a34a;
+    --warn: #f59e0b;
+    --bad: #ef4444;
+    --muted: #98a8bb;
+    --glass: rgba(255,255,255,0.03);
+  }
+  html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;background:linear-gradient(180deg,var(--bg-1),#041226);color:#e6eef6}
+  .app{display:grid;grid-template-columns:380px 1fr 360px;gap:16px;padding:14px;height:calc(100vh - 28px)}
+  .panel{background:var(--panel);border-radius:14px;padding:12px;border:1px solid rgba(255,255,255,0.04);box-shadow:0 8px 30px rgba(2,6,23,0.6);overflow:auto}
+  h1{font-size:16px;margin:0 0 8px 0}
+  .small{font-size:12px;color:var(--muted)}
+  /* left column list */
+  .controls .row{display:flex;gap:8px;margin-bottom:8px}
+  input[type=search], select{width:100%;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+  .chip{padding:8px 10px;border-radius:999px;background:var(--glass);cursor:pointer;border:1px solid rgba(255,255,255,0.02);font-weight:600}
+  .chip.active{background:linear-gradient(90deg,var(--accent-a),var(--accent-b));color:#021127;box-shadow:0 6px 18px rgba(7,12,30,0.5)}
+  .hlist{display:flex;flex-direction:column;gap:10px}
+  .hcard{display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,0.012),rgba(255,255,255,0.006));border:1px solid rgba(255,255,255,0.02);cursor:pointer}
+  .hmeta{display:flex;flex-direction:column;gap:4px}
+  .hname{font-weight:800}
+  .meta-line{font-size:13px;color:var(--muted)}
+  .status{font-weight:800;padding:6px 10px;border-radius:999px}
+  .status.available{color:var(--good);background:rgba(22,163,74,0.08)}
+  .status.limited{color:var(--warn);background:rgba(245,158,11,0.08)}
+  .status.full{color:var(--bad);background:rgba(239,68,68,0.08)}
+  /* center map */
+  #map{height:100%;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.04)}
+  .map-overlay{position:absolute;left:50%;transform:translateX(-50%);top:18px;z-index:2000;background:linear-gradient(90deg,var(--accent-a),var(--accent-b));padding:8px 12px;border-radius:999px;color:#021127;font-weight:800;box-shadow:0 10px 30px rgba(7,12,30,0.6)}
+  /* right dashboard */
+  .dashboard .card{background:linear-gradient(180deg,rgba(255,255,255,0.015),rgba(255,255,255,0.006));padding:10px;border-radius:10px;margin-bottom:10px;border:1px solid rgba(255,255,255,0.02)}
+  .fleet-list{display:flex;flex-direction:column;gap:8px}
+  .fcard{display:flex;align-items:center;gap:10px;padding:8px;border-radius:10px;background:rgba(255,255,255,0.01)}
+  .dot{width:12px;height:12px;border-radius:50%}
+  .dot.idle{background:#7dd3fc}
+  .dot.enroute{background:linear-gradient(90deg,#ffb86b,#ff6b96)}
+  .progress{height:8px;border-radius:8px;background:rgba(255,255,255,0.02);overflow:hidden}
+  .progress > i{display:block;height:100%;}
+  .green{i{background:linear-gradient(90deg,#00c853,#00e676)}}
+  .muted{color:var(--muted)}
+  /* responsiveness */
+  @media(max-width:1100px){.app{grid-template-columns:1fr;grid-template-rows:420px 1fr 320px}}
+  .footer-note{font-size:12px;color:var(--muted);margin-top:8px}
+</style>
+</head>
+<body>
+  <div class="app">
+    <!-- LEFT: Hospital Network -->
+    <div class="panel">
+      <h1>Hospital Network — Dadar · Sion · Matunga · Wadala</h1>
+      <div class="small">Interactive list with filters, specializations, bed counts & AI matching</div>
+
+      <div class="controls" style="margin-top:12px">
+        <div style="flex:1">
+          <input id="q" type="search" placeholder="Search hospital or speciality"/>
+        </div>
+        <div style="width:120px">
+          <select id="areaFilter">
+            <option value="">All areas</option>
+            <option>Dadar</option><option>Sion</option><option>Matunga</option><option>Wadala</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="chips" id="specChips">
+        <!-- specialization chips injected by JS -->
+      </div>
+
+      <div class="hlist" id="hlist"></div>
+
+      <div style="margin-top:12px" class="footer-note">Click a hospital in the list or marker on map to select. Use the "Match" button in a hospital card for AI match (score explanation shown).</div>
+    </div>
+
+    <!-- CENTER: Leaflet map -->
+    <div style="position:relative">
+      <div class="map-overlay">Dadar↔Sion↔Matunga↔Wadala — Live Dispatch Demo</div>
+      <div id="map"></div>
+    </div>
+
+    <!-- RIGHT: Command Dashboard -->
+    <div class="panel dashboard">
+      <h1>Command Dashboard</h1>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-weight:800;font-size:18px" id="statAmb">0</div>
+            <div class="small">Active ambulances</div>
+          </div>
+          <div>
+            <div style="font-weight:800;font-size:18px" id="statETA">0s</div>
+            <div class="small">Avg ETA</div>
+          </div>
+          <div>
+            <div style="font-weight:800;font-size:18px" id="statBeds">0</div>
+            <div class="small">Free beds total</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="font-weight:800;margin-bottom:8px">Fleet</div>
+        <div class="fleet-list" id="fleetList"></div>
+      </div>
+
+      <div class="card">
+        <div style="font-weight:800;margin-bottom:8px">Resource Allocation (Top 5)</div>
+        <div id="resourceList"></div>
+      </div>
+
+      <div class="card">
+        <div style="font-weight:800;margin-bottom:8px">Controls</div>
+        <div style="display:flex;gap:8px">
+          <div class="chip" id="toggleSim">Pause</div>
+          <div class="chip" id="assignAll">Assign nearest to highlighted hospital</div>
+        </div>
+        <div class="small" style="margin-top:8px">Integration hooks: look for `ON_UPDATE_*` comments in the script to wire backend streams (WebSocket / Firebase / Supabase).</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <script>
+/* =========================
+   Dadar/Sion/Matunga/Wadala Demo
+   - All core features implemented in plain JS
+   - Replace simulated updates with your backend (see hooks below)
+   ========================= */
+
+const regionCenter = [19.028,72.846]; // center
+/* --------------------------
+   Hospital dataset (hard-coded for demo)
+   lat/lon approximations for hospitals in the 4 neighborhoods
+   Replace these with your DB records or fetch from API.
+   Fields: id,name,area,lat,lon,totalBeds,freeBeds,specialization
+   -------------------------- */
+const hospitals = [
+  {id:'H1', name:'Shushrusha Hospital (Dadar W)', area:'Dadar', lat:19.02345, lon:72.83781, totalBeds:200, freeBeds:30, specialization:'Cardiology, General'},
+  {id:'H2', name:'P. D. Hinduja Hospital (nearby)', area:'Dadar', lat:19.03325, lon:72.83830, totalBeds:520, freeBeds:40, specialization:'Multi-speciality, ICU'},
+  {id:'H3', name:'LTMGH / Sion Hospital', area:'Sion', lat:19.03693, lon:72.85825, totalBeds:1400, freeBeds:10, specialization:'Trauma, Pediatrics'},
+  {id:'H4', name:'Wadala Pulmonology Center', area:'Wadala', lat:19.01058, lon:72.85536, totalBeds:80, freeBeds:25, specialization:'Pulmonology'},
+  {id:'H5', name:'Matunga Eye Clinic', area:'Matunga', lat:19.02740, lon:72.85015, totalBeds:40, freeBeds:6, specialization:'Ophthalmology'},
+  {id:'H6', name:'Dadar East Nursing Home', area:'Dadar', lat:19.01950, lon:72.84290, totalBeds:60, freeBeds:8, specialization:'General'}
+];
+
+/* --------------------------
+   Ambulance fleet (simulated)
+   -------------------------- */
+const ambulances = []; // will populate
+
+/* Basic utils */
+function toRad(d){return d*Math.PI/180;}
+function haversine([lat1,lon1],[lat2,lon2]){
+  const R=6371000;
+  const dLat=toRad(lat2-lat1), dLon=toRad(lon2-lon1);
+  const a=Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a)); // meters
+}
+function availabilityStatus(h){
+  const r = h.freeBeds / h.totalBeds;
+  if(h.freeBeds<=0) return 'full';
+  if(r < 0.12) return 'limited';
+  return 'available';
+}
+
+/* --- Map init (Leaflet) --- */
+const map = L.map('map', { zoomControl:true }).setView(regionCenter, 13);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{ attribution:'&copy; OSM contributors' }).addTo(map);
+
+/* custom icons (SVG in divIcon) */
+const hospitalIcon = L.divIcon({ className:'hicon', html:`<svg width=28 height=28 viewBox="0 0 24 24"><path fill="${'#7c3aed'}" d="M12 2C10.3 2 9 3.3 9 5V7H7C5.3 7 4 8.3 4 10V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V10C20 8.3 18.7 7 17 7H15V5C15 3.3 13.7 2 12 2Z"/></svg>` , iconSize:[28,28], iconAnchor:[14,28] });
+const ambulanceIcon = L.divIcon({ className:'aicon', html:`<svg width=38 height=20 viewBox="0 0 24 16"><path fill="#7dd3fc" d="M1 9h2v3H1zM4 9h7v4H4zM13 9h3l3 3h1V6h-7z"/><circle cx="6.5" cy="13.5" r="1.5" fill="#fff"/><circle cx="15.5" cy="13.5" r="1.5" fill="#fff"/></svg>`, iconSize:[38,20], iconAnchor:[19,10] });
+
+/* markers store */
+const hospitalMarkers = {};
+const ambulanceMarkers = {};
+
+/* render hospitals on map */
+function renderHospitals(){
+  hospitals.forEach(h=>{
+    // create/update marker
+    if(!hospitalMarkers[h.id]){
+      const marker = L.marker([h.lat,h.lon],{icon:hospitalIcon}).addTo(map);
+      marker.bindPopup(generateHospitalPopup(h));
+      marker.on('click', ()=> selectHospital(h));
+      hospitalMarkers[h.id] = marker;
+    } else {
+      hospitalMarkers[h.id].setLatLng([h.lat,h.lon]);
+      hospitalMarkers[h.id].getPopup().setContent(generateHospitalPopup(h));
+    }
+  });
+}
+
+/* generate popup HTML for hospital including route/ETA button */
+function generateHospitalPopup(h){
+  const status = availabilityStatus(h);
+  return `
+    <div style="min-width:220px">
+      <div style="font-weight:800">${h.name}</div>
+      <div class="small">${h.specialization} • ${h.area}</div>
+      <div style="margin-top:8px"><strong>${h.freeBeds}/${h.totalBeds}</strong> beds • <span style="color:${status==='available'?'#16a34a':status==='limited'?'#f59e0b':'#ef4444'}">${status.toUpperCase()}</span></div>
+      <div style="margin-top:8px">
+        <button class="chip" onclick="window._assignNearestAmb('${h.id}')">Assign nearest ambulance</button>
+        <button class="chip" onclick="window._routeToHospital('${h.id}')">Show route (OSRM)</button>
+      </div>
+    </div>
+  `;
+}
+
+/* left-side list rendering with filters & chips */
+const specSet = new Set();
+hospitals.forEach(h=> h.specialization.split(',').map(s=>s.trim()).forEach(s=>specSet.add(s)));
+const specs = Array.from(specSet);
+
+const specChipsContainer = document.getElementById('specChips');
+let activeSpec = null;
+specs.forEach(s=>{
+  const el = document.createElement('div'); el.className='chip'; el.textContent=s;
+  el.onclick = ()=>{ document.querySelectorAll('#specChips .chip').forEach(c=>c.classList.remove('active')); if(activeSpec===s){activeSpec=null}else{activeSpec=s; el.classList.add('active')} renderList(); };
+  specChipsContainer.appendChild(el);
+});
+
+document.getElementById('q').addEventListener('input', renderList);
+document.getElementById('areaFilter').addEventListener('change', renderList);
+
+function renderList(){
+  const q = (document.getElementById('q').value||'').toLowerCase();
+  const area = document.getElementById('areaFilter').value;
+  const list = document.getElementById('hlist'); list.innerHTML='';
+  hospitals.filter(h=>{
+    if(area && h.area !== area) return false;
+    if(activeSpec){
+      if(!h.specialization.toLowerCase().includes(activeSpec.toLowerCase())) return false;
+    }
+    if(q && !(h.name.toLowerCase().includes(q) || h.specialization.toLowerCase().includes(q))) return false;
+    return true;
+  }).sort((a,b)=> availabilityRank(a)-availabilityRank(b)).forEach(h=>{
+    const div = document.createElement('div'); div.className='hcard';
+    div.innerHTML = `
+      <div class="hmeta">
+        <div class="hname">${h.name}</div>
+        <div class="meta-line">${h.specialization} • ${h.area}</div>
+        <div class="small">${Math.round(haversine([regionCenter[0],regionCenter[1]],[h.lat,h.lon]))} m approx to center</div>
+      </div>
+      <div style="text-align:right">
+        <div class="status ${availabilityStatus(h)}">${availabilityStatus(h).toUpperCase()}</div>
+        <div class="small" style="margin-top:8px">${h.freeBeds}/${h.totalBeds} beds</div>
+        <div style="margin-top:8px"><button class="chip" onclick="event.stopPropagation(); window._assignNearestAmb('${h.id}')">Match & Assign</button></div>
+      </div>
+    `;
+    div.onclick = ()=>{ map.setView([h.lat,h.lon],15); hospitalMarkers[h.id].openPopup(); selectHospital(h); };
+    list.appendChild(div);
+  });
+}
+
+function availabilityRank(h){ const s=availabilityStatus(h); return s==='available'?0: s==='limited'?1:2; }
+
+/* --- ambulances init --- */
+function initAmbulances(count=5){
+  // distribute across bounding box of hospitals
+  const lats = hospitals.map(h=>h.lat), lons = hospitals.map(h=>h.lon);
+  const minLat=Math.min(...lats), maxLat=Math.max(...lats), minLon=Math.min(...lons), maxLon=Math.max(...lons);
+  for(let i=0;i<count;i++){
+    const lat = minLat + Math.random()*(maxLat-minLat);
+    const lon = minLon + Math.random()*(maxLon-minLon);
+    const amb = { id:`AMB${100+i}`, lat, lon, target:null, status:'idle', speed: (6 + Math.random()*8) }; // m/s
+    ambulances.push(amb);
+    amb.marker = L.marker([amb.lat,amb.lon],{icon:ambulanceIcon}).addTo(map).bindPopup(`<b>${amb.id}</b><div class="small">status: ${amb.status}</div><div style="margin-top:6px"><button onclick="window._sendAmb('${amb.id}')">Send</button></div>`);
+    ambulanceMarkers[amb.id] = amb.marker;
+  }
+}
+
+/* assign nearest ambulance to hospital */
+function assignNearestAmbToHospital(hid){
+  const h = hospitals.find(x=>x.id===hid); if(!h) return;
+  const sorted = ambulances.slice().sort((A,B)=> haversine([A.lat,A.lon],[h.lat,h.lon]) - haversine([B.lat,B.lon],[h.lat,h.lon]) );
+  const amb = sorted[0];
+  if(!amb) return alert('No ambulances available');
+  amb.target = { lat:h.lat, lon:h.lon, hospitalId: h.id };
+  amb.status = 'enroute';
+}
+window._assignNearestAmb = assignNearestAmbToHospital;
+
+/* manual send button */
+window._sendAmb = function(ambId){
+  const a = ambulances.find(x=>x.id===ambId); if(!a) return;
+  // if hospital selected, use it, else random
+  const hid = window._lastSelectedHospitalId || hospitals[Math.floor(Math.random()*hospitals.length)].id;
+  assignNearestAmbToHospital(hid);
+}
+
+/* route to hospital (OSRM) */
+window._routeToHospital = async function(hid){
+  const h = hospitals.find(x=>x.id===hid); if(!h) return;
+  // example: from region center to hospital
+  const from = regionCenter, to = [h.lat,h.lon];
+  try{
+    // public demo OSRM route (no key). Not for heavy production.
+    const url = `https://router.project-osrm.org/route/v1/driving/${from[1]},${from[0]};${to[1]},${to[0]}?overview=full&geometries=geojson`;
+    const res = await fetch(url);
+    if(!res.ok) throw new Error('OSRM failed');
+    const data = await res.json();
+    if(data.routes && data.routes.length){
+      const coords = data.routes[0].geometry.coordinates.map(c=>[c[1],c[0]]);
+      if(window.currentRouteLayer) map.removeLayer(window.currentRouteLayer);
+      window.currentRouteLayer = L.polyline(coords,{color:'#7c3aed',weight:4,opacity:0.9}).addTo(map);
+      map.fitBounds(window.currentRouteLayer.getBounds(),{padding:[50,50]});
+    } else throw new Error('No route');
+  } catch(e){
+    alert('OSRM route failed. Falling back to straight-line display.');
+    if(window.currentRouteLayer) map.removeLayer(window.currentRouteLayer);
+    window.currentRouteLayer = L.polyline([[from[0],from[1]],[to[0],to[1]]],{color:'#ff6b6b',weight:3,opacity:0.8,dashArray:'6 6'}).addTo(map);
+  }
+}
+
+/* simulation step: move ambulances toward targets and simulate bed usage */
+function step(dt){
+  ambulances.forEach(a=>{
+    if(!a.target){ // idle wander
+      a.lat += (Math.random()-0.5)*0.00006;
+      a.lon += (Math.random()-0.5)*0.00006;
+    } else {
+      const d = haversine([a.lat,a.lon],[a.target.lat,a.target.lon]);
+      if(d < 12){ // arrived
+        a.status = 'idle';
+        // consume bed in target hospital if available (simulate)
+        const h = hospitals.find(x=>x.id===a.target.hospitalId);
+        if(h && h.freeBeds>0 && Math.random()<0.75) h.freeBeds = Math.max(0,h.freeBeds-1);
+        a.target = null;
+      } else {
+        const moveMeters = a.speed * (dt/1000); // meters this tick
+        const frac = moveMeters / d;
+        a.lat += (a.target.lat - a.lat) * frac;
+        a.lon += (a.target.lon - a.lon) * frac;
+      }
+    }
+    // update marker
+    if(a.marker) a.marker.setLatLng([a.lat,a.lon]).getPopup().setContent(`<b>${a.id}</b><div class="small">status: ${a.status}${a.target? ' → '+a.target.hospitalId:''}</div><div style="margin-top:8px"><button onclick="window._sendAmb('${a.id}')">Send</button></div>`);
+  });
+
+  // small random changes to bed availability to simulate real-time updates
+  if(Math.random() < 0.14){
+    const h = hospitals[Math.floor(Math.random()*hospitals.length)];
+    const change = Math.random()<0.5 ? -1 : 1;
+    h.freeBeds = Math.max(0, Math.min(h.totalBeds, h.freeBeds + change));
+  }
+
+  // update UI lists & stats
+  renderHospitals(); renderList(); renderFleet(); renderResources(); updateStats();
+}
+
+/* update stats */
+function updateStats(){
+  document.getElementById('statAmb').textContent = ambulances.length;
+  // avg ETA to nearest target or center
+  const avg = ambulances.reduce((s,a)=>{
+    const to = a.target ? [a.target.lat,a.target.lon] : regionCenter;
+    return s + Math.round(haversine([a.lat,a.lon],to));
+  },0) / Math.max(1,ambulances.length);
+  document.getElementById('statETA').textContent = Math.round(avg) + 'm';
+  const totalBeds = hospitals.reduce((s,h)=>s + h.freeBeds,0);
+  document.getElementById('statBeds').textContent = totalBeds;
+}
+
+/* render fleet list in dashboard */
+function renderFleet(){
+  const list = document.getElementById('fleetList'); list.innerHTML='';
+  ambulances.forEach(a=>{
+    const div = document.createElement('div'); div.className='fcard';
+    const dot = document.createElement('div'); dot.className = 'dot '+(a.status==='idle'?'idle':'enroute');
+    const meta = document.createElement('div'); meta.style.flex='1';
+    meta.innerHTML = `<div style="font-weight:800">${a.id}</div><div class="small">pos: ${a.lat.toFixed(4)}, ${a.lon.toFixed(4)}</div>`;
+    const btns = document.createElement('div');
+    btns.innerHTML = `<button class="chip" onclick="event.stopPropagation(); window._sendAmb('${a.id}')">Send</button>`;
+    div.appendChild(dot); div.appendChild(meta); div.appendChild(btns);
+    list.appendChild(div);
+  });
+}
+
+/* resource allocation top 5 */
+function renderResources(){
+  const container = document.getElementById('resourceList'); container.innerHTML='';
+  // sort by freeBeds desc
+  hospitals.slice().sort((a,b)=>b.freeBeds-a.freeBeds).slice(0,5).forEach(h=>{
+    const d = document.createElement('div'); d.className='hcard';
+    d.innerHTML = `<div style="flex:1"><div style="font-weight:700">${h.name}</div><div class="small">${h.specialization} • ${h.area}</div></div>
+      <div style="text-align:right"><div class="small">${h.freeBeds}/${h.totalBeds}</div><div class="status ${availabilityStatus(h)}" style="margin-top:6px">${availabilityStatus(h).toUpperCase()}</div></div>`;
+    container.appendChild(d);
+  });
+}
+
+/* select hospital (center & highlight) */
+let selectedHospital = null;
+window._lastSelectedHospitalId = null;
+function selectHospital(h){
+  selectedHospital = h; window._lastSelectedHospitalId = h.id;
+  renderHospitals();
+  hospitalMarkers[h.id].openPopup();
+}
+
+/* AI hospital matching algorithm
+   - Input: incident object (lat, lon, requiredSpeciality)
+   - Scoring weights: specialization match (40%), free beds (30%), ETA (30%)
+   - Lower ETA = higher score. We normalize to 0..1
+*/
+function aiMatchHospital(incident, debug=false){
+  // compute ETA (meters) using haversine fallback; optionally call OSRM for route
+  const scores = hospitals.map(h=>{
+    const distMeters = haversine([incident.lat,incident.lon],[h.lat,h.lon]); // meters
+    const etaScore = 1 - Math.min(distMeters,20000)/20000; // 0..1 (closer better)
+    const bedsScore = Math.min(h.freeBeds / Math.max(1,h.totalBeds), 1); // 0..1
+    const specScore = h.specialization.toLowerCase().includes(incident.speciality.toLowerCase()) ? 1 : 0;
+    const final = 0.4*specScore + 0.3*bedsScore + 0.3*etaScore;
+    return { hospitalId: h.id, final, breakdown:{specScore,bedsScore,etaScore}, distMeters };
+  });
+  // sort descending by final
+  scores.sort((a,b)=>b.final - a.final);
+  if(debug) return scores;
+  return scores[0];
+}
+
+/* UI hook to create a fake incident and run matching (for demo) */
+function demoMatchAtCenter(){
+  const incident = { lat: regionCenter[0] + (Math.random()-0.5)*0.003, lon: regionCenter[1] + (Math.random()-0.5)*0.003, speciality: 'Cardiology' };
+  const result = aiMatchHospital(incident, true);
+  console.log('AI ranking (top 3):', result.slice(0,3));
+  alert('Top match: '+ result[0].hospitalId + '\\nScore breakdown: ' + JSON.stringify(result[0].breakdown));
+}
+
+/* availability ranking util (for sorting) */
+function availabilityRank(h){ return availabilityStatus(h)==='available'?0: availabilityStatus(h)==='limited'?1:2; }
+
+/* ---------------------------
+   Simulation loop + controls
+   --------------------------- */
+let last = performance.now();
+let running = true;
+function frame(now){
+  const dt = now - last; last = now;
+  if(running) step(dt);
+  last = now;
+  requestAnimationFrame(frame);
+}
+
+/* toggle simulation button */
+document.getElementById('toggleSim').addEventListener('click', ()=>{
+  running = !running; document.getElementById('toggleSim').textContent = running? 'Pause' : 'Resume';
+});
+
+/* assignAll button - send nearest ambulances to the selected hospital (controlled demo) */
+document.getElementById('assignAll').addEventListener('click', ()=>{
+  if(!window._lastSelectedHospitalId){ alert('Select a hospital first'); return; }
+  // assign top N ambulances to that hospital
+  ambulances.slice().sort((a,b)=> haversine([a.lat,a.lon], hospitals.find(h=>h.id===window._lastSelectedHospitalId).lat ? [hospitals.find(h=>h.id===window._lastSelectedHospitalId).lat,hospitals.find(h=>h.id===window._lastSelectedHospitalId).lon] : regionCenter) )
+    .slice(0,3).forEach(a=> a.target = { lat: hospitals.find(h=>h.id===window._lastSelectedHospitalId).lat, lon: hospitals.find(h=>h.id===window._lastSelectedHospitalId).lon, hospitalId: window._lastSelectedHospitalId }, a.status='enroute');
+});
+
+/* expose small debug API for console */
+window._demo = { hospitals, ambulances, aiMatchHospital };
+
+/* ON_UPDATE hooks - where you'd plug in real backend streams:
+   - ON_UPDATE_HOSPITALS(dataArray) -> replace hospitals array or merge changes
+   - ON_UPDATE_AMBULANCES(dataArray) -> update ambulances positions & targets (from GPS feed)
+   e.g. window.ON_UPDATE_HOSPITALS = function(data){ ... }  */
+window.ON_UPDATE_HOSPITALS = function(data){
+  // expected shape: [{id,name,area,lat,lon,totalBeds,freeBeds,specialization}, ...]
+  // naive merge by id:
+  data.forEach(d=>{
+    const idx = hospitals.findIndex(h=>h.id===d.id);
+    if(idx>=0) hospitals[idx] = Object.assign(hospitals[idx], d);
+    else hospitals.push(d);
+  });
+  renderHospitals(); renderList(); renderResources();
+};
+window.ON_UPDATE_AMBULANCES = function(data){
+  // expected shape: [{id,lat,lon,status,target}, ...]
+  data.forEach(d=>{
+    const idx = ambulances.findIndex(a=>a.id===d.id);
+    if(idx>=0){
+      Object.assign(ambulances[idx], d);
+      if(ambulanceMarkers[d.id]) ambulanceMarkers[d.id].setLatLng([d.lat,d.lon]);
+    } else {
+      // create new
+      const a = Object.assign({speed:8}, d);
+      ambulances.push(a);
+      a.marker = L.marker([a.lat,a.lon],{icon:ambulanceIcon}).addTo(map);
+      ambulanceMarkers[a.id] = a.marker;
+    }
+  });
+  renderFleet();
+};
+
+/* startup */
+renderHospitals();
+renderList();
+initAmbulances(5);
+renderFleet();
+renderResources();
+updateStats();
+requestAnimationFrame(frame);
+
+/* convenience: assign nearest amb to hospital from popup button (exposed) */
+window._assignNearestAmb = assignNearestAmbToHospital;
+
+  </script>
+
+</body>
+</html>
