@@ -1,4 +1,4 @@
-# 🚑 **𝙅𝙚𝙚𝙫𝙖𝙣 𝘾𝙤𝙣𝙣𝙚𝙘𝙩 – Real Time Ambulance Tracker**
+# 🚑 **𝙅𝙚𝙚𝙫𝙖𝙣𝘾𝙤𝙣𝙣𝙚𝙘𝙩 – Real Time Ambulance Tracker**
 
 🚨 **𝙅𝙚𝙚𝙫𝙖𝙣 𝘾𝙤𝙣𝙣𝙚𝙘𝙩** is a **real-time ambulance tracking and emergency coordination web platform**.  
 It connects **patients, ambulances, hospitals, and traffic control systems** to ensure **faster emergency response**, **optimized hospital allocation**, and **smart traffic management** — powered by **HTML, CSS, and JavaScript**.
