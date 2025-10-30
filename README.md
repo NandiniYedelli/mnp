@@ -6,75 +6,76 @@
 [![Domain](https://img.shields.io/badge/Domain-Healthcare-red?style=for-the-badge)]()
 
 🚨 **𝙅𝙚𝙚𝙫𝙖𝙣 𝘾𝙤𝙣𝙣𝙚𝙘𝙩** is a **real-time ambulance tracking and emergency coordination web platform**.  
-It connects **patients, ambulances, hospitals, and traffic control** to ensure **faster emergency response** and **optimized medical assistance** using smart automation, live data, and AI-driven insights.
-
-Built using **HTML, CSS, and JavaScript**, it brings together real-time tracking, communication, and hospital management into one seamless system.
+It connects **patients, ambulances, hospitals, and traffic control systems** to ensure **faster emergency response**, **optimized hospital allocation**, and **smart traffic management** — powered by **HTML, CSS, and JavaScript**.
 
 ---
 
-## ⚙️ **1️⃣ Emergency & Patient Management Module** 🚑
+## ⚙️ **1️⃣ Emergency & Patient Management Module** 🚑  
+👩‍💻 *Developed by: Nandini Yedelli*
 
 ### 🧭 Overview  
-The **first response layer** that helps users trigger SOS alerts, track patient location, and manage emergency health details instantly.
+This module enables users to raise emergency alerts, share live location, and provide patient data instantly to responders.
 
 ### 🔹 Core Features
-- One-tap emergency SOS activation  
-- Real-time location sharing  
-- Live health and patient details display  
+- One-tap SOS activation system  
+- Real-time location tracking and sharing  
+- Patient health profile & medical history  
 - Emergency contact alerts and notifications  
-- AI-based quick health status estimation  
+- AI-based health status estimation  
 
 ### 💡 Tech Highlights
 - **Geolocation API** for live tracking  
-- **Notification API** for alerts  
-- Integration-ready with wearable devices for vitals  
+- **Notification API** for browser alerts  
+- Future-ready for IoT wearable integration  
 
 ---
 
-## 🏥 **2️⃣ Hospital & Resource Management Module**
+## 🏥 **2️⃣ Hospital & Resource Management Module**  
+👩‍💻 *Developed by: Samiksha Chavan*
 
 ### 🧭 Overview  
-Links ambulances and patients to nearby hospitals with **real-time resource availability** and **AI-based hospital matching**.
+This module connects patients and ambulances to hospitals using live data to enable **intelligent hospital selection** and **resource tracking**.
 
 ### 🔹 Core Features
-- Smart listing of nearby hospitals  
-- Real-time bed and resource status  
+- Smart hospital listing with real-time availability  
+- AI-based hospital matching (distance + capacity)  
 - Command center dashboard for live ambulance tracking  
-- Intelligent hospital matching using distance and capacity  
-- Route visualization and ETA tracking  
+- Real-time resource and bed updates  
+- Visual route display and ETA tracking  
 
 ### 💡 Tech Highlights
-- **Google Maps API** for location and routing  
-- **Firebase / JSON APIs** for dynamic data  
-- **Dashboard analytics** for hospital monitoring  
+- **Google Maps API** for mapping & distance calculation  
+- **Firebase / JSON APIs** for live data simulation  
+- **Dynamic dashboards** for admin monitoring  
 
 ---
 
-## 🚦 **3️⃣ Traffic & Communication Management Module**
+## 🚦 **3️⃣ Traffic & Communication Management Module**  
+👩‍💻 *Developed by: Christina Nadar*
 
 ### 🧭 Overview  
-Ensures **uninterrupted emergency movement** through AI-controlled traffic routing and direct communication between all stakeholders.
+Handles **traffic control coordination** and **real-time communication** between ambulances, hospitals, and command centers.
 
 ### 🔹 Core Features
-- Real-time ambulance route optimization  
+- AI-based route optimization  
 - Live traffic congestion monitoring  
-- ETA countdown and smart rerouting  
+- Real-time ETA prediction  
 - Multi-party chat between ambulance, hospital & traffic control  
-- Automated emergency broadcast to signal networks  
+- Automatic emergency broadcast system  
 
 ### 💡 Tech Highlights
-- **Socket.IO / WebSocket** for instant communication  
-- **Google Maps Traffic Layer** for congestion visualization  
-- Role-based dashboards for quick coordination  
+- **Socket.IO / WebSocket** for real-time communication  
+- **Google Maps Traffic Layer** for congestion data  
+- Role-based dashboards with color-coded communication  
 
 ---
 
 ## 🧠 **AI & Smart Automation**
 
-✅ Smart hospital matching (availability + distance)  
-✅ Predictive route and ETA generation  
-✅ Instant automated notifications  
-✅ Real-time status updates and analytics  
+✅ Smart hospital matching using distance and availability  
+✅ Predictive ETA and rerouting algorithm  
+✅ Real-time notifications and alerts  
+✅ Automated coordination between stakeholders  
 
 ---
 
@@ -82,21 +83,21 @@ Ensures **uninterrupted emergency movement** through AI-controlled traffic routi
 
 | Layer | Components | Purpose |
 |-------|-------------|----------|
-| **Frontend** | HTML, CSS, JavaScript | Core UI and interactivity |
-| **Mapping Services** | Google Maps, Geolocation API | Live ambulance tracking |
-| **Communication** | WebSocket / Socket.IO | Real-time message exchange |
-| **Backend (optional)** | Firebase / JSON APIs | Data sync and live updates |
-| **AI Engine (future)** | Route and hospital prediction | Automated decision-making |
+| **Frontend** | HTML, CSS, JavaScript | Interactive UI and dashboards |
+| **Mapping Services** | Google Maps, Geolocation API | Live tracking and route mapping |
+| **Communication** | WebSocket / Socket.IO | Real-time coordination |
+| **Database (optional)** | Firebase / JSON APIs | Data sync and storage |
+| **AI Engine (future)** | ML-based route prediction | Intelligent automation |
 
 ---
 
-## 🎨 **Design & User Experience**
+## 🎨 **User Interface Design**
 
-🌿 Calm, healthcare-inspired color scheme  
-📱 Fully responsive web interface  
-🚨 Animated SOS button and live indicators  
-📊 Interactive, curved dashboards for real-time monitoring  
-🎯 Clean and accessible interface for fast decision-making  
+🌿 Nature-inspired, healthcare-focused design  
+📱 Fully responsive layout (desktop + mobile)  
+🚨 Animated SOS button with pulse effect  
+📊 Smooth, interactive dashboards  
+🎯 Clear and minimal design for fast navigation  
 
 ---
 
@@ -114,11 +115,11 @@ Ensures **uninterrupted emergency movement** through AI-controlled traffic routi
 
 ## 🚀 **Future Enhancements**
 
-- Integration with IoT devices for patient vitals  
-- AI-driven hospital load prediction  
-- Smart traffic signal control using IoT sensors  
-- Progressive Web App (PWA) support for mobile  
-- Voice-based SOS activation and alerts  
+- Integration with IoT sensors for patient vitals  
+- AI-based hospital load forecasting  
+- Smart traffic signal control through IoT  
+- Voice command–based SOS activation  
+- Progressive Web App (PWA) version for mobile devices  
 
 ---
 
@@ -126,9 +127,9 @@ Ensures **uninterrupted emergency movement** through AI-controlled traffic routi
 
 | Name | Role |
 |------|------|
-| 👩‍💻 **Samiksha Chavan** | Web Development & System Integration |
-| 👩‍💻 **Nandini Yedelli** | UI/UX Design & Architecture |
-| 👩‍💻 **Team Jeevan Connect** | Research & Implementation |
+| 👩‍💻 **Nandini Yedelli** | Emergency & Patient Module |
+| 👩‍💻 **Samiksha Chavan** | Hospital & Resource Management Module |
+| 👩‍💻 **Christina Nadar** | Traffic & Communication Module |
 
 ---
 
